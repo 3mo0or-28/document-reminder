@@ -1,0 +1,1 @@
+{"name":"vaulta","private":true,"scripts":{"build":"node build.js"}}
