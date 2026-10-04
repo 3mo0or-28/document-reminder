@@ -37,5 +37,10 @@ if(required.some(x=>!html.includes(x))){
   process.exit(1);
 }
 
+// Load a runtime safeguard after the main app so the current folder wins even
+// if another wizard action changes the folder later.
+html=html.replace('</body>','<script src="/folder-context-fix.js"></script></body>');
+
 fs.writeFileSync('dist/index.html',html);
+fs.copyFileSync('folder-context-fix.js','dist/folder-context-fix.js');
 fs.writeFileSync('dist/config.js','window.APP_CONFIG='+JSON.stringify({url:u,anonKey:k})+';');
