@@ -3,19 +3,25 @@ if(!u||!k){console.error('Set SUPABASE_URL and SUPABASE_ANON_KEY');process.exit(
 fs.rmSync('dist',{recursive:true,force:true});fs.mkdirSync('dist');
 let html=fs.readFileSync('index.html','utf8');
 
-// When Add Document is opened while viewing a folder, default the wizard to
-// that exact folder instead of Personal Documents.
+const before=html;
+
+// Make the add-document wizard use the folder currently being viewed.
 html=html.replace(
   "folder:d?.folder||'personal',pre:",
   "folder:d?.folder||((ui.v=='docs'&&ui.folder)?ui.folder:'personal'),pre:"
 );
 
-// Picking a document category normally changes the folder automatically.
-// Keep the current folder when the user launched Add Document from a folder.
+// Do not let category selection overwrite the current folder.
 html=html.replace(
   "if(!w.old)w.folder=CATS.find(x=>x[0]==c)[2];w.step=2;wz()",
   "if(!w.old&&!(ui.v=='docs'&&ui.folder))w.folder=CATS.find(x=>x[0]==c)[2];w.step=2;wz()"
 );
+
+// Fail loudly if the source changed and the production patch was not applied.
+if(html===before || !html.includes("folder:d?.folder||((ui.v=='docs'&&ui.folder)?ui.folder:'personal'),pre:")){
+  console.error('Folder-context patch was not applied to index.html');
+  process.exit(1);
+}
 
 fs.writeFileSync('dist/index.html',html);
 fs.writeFileSync('dist/config.js','window.APP_CONFIG='+JSON.stringify({url:u,anonKey:k})+';');
