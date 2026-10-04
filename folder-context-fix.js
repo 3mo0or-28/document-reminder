@@ -1,29 +1,25 @@
 // Preserve the currently open folder when adding a new document.
+// This runs after the main app script and uses the app's global lexical variables
+// directly (ui / w), not window.ui / window.w.
 (() => {
+  if (typeof docForm !== 'function') return;
+
   const originalDocForm = docForm;
   let folderAtOpen = '';
 
   docForm = function patchedDocForm(id) {
-    folderAtOpen = !id && ui.v === 'docs' && ui.folder ? ui.folder : '';
+    folderAtOpen = !id && ui && ui.v === 'docs' && ui.folder ? ui.folder : '';
     originalDocForm(id);
-
-    if (folderAtOpen && w && !w.old) {
-      w.folder = folderAtOpen;
-    }
+    if (folderAtOpen && w && !w.old) w.folder = folderAtOpen;
   };
 
-  // The category picker normally switches to a category-default folder.
-  // Restore the folder the user was viewing after the tile click completes.
   document.addEventListener('click', (event) => {
     if (!folderAtOpen || !w || w.old) return;
     if (!event.target.closest('.tile')) return;
 
     const selectedFolder = folderAtOpen;
     setTimeout(() => {
-      if (w && !w.old) {
-        w.folder = selectedFolder;
-        if (w.step === 3) wz(0);
-      }
+      if (w && !w.old) w.folder = selectedFolder;
     }, 0);
   }, true);
 })();
