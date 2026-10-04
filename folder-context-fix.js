@@ -1,33 +1,29 @@
 // Preserve the currently open folder when adding a new document.
-// The main wizard auto-picks a category folder; this patch keeps the user's
-// explicit folder context when Add Document is launched from a folder view.
 (() => {
-  const originalDocForm = window.docForm;
-  if (typeof originalDocForm !== 'function') return;
-
+  const originalDocForm = docForm;
   let folderAtOpen = '';
 
-  window.docForm = function patchedDocForm(id) {
-    folderAtOpen = !id && window.ui?.v === 'docs' && window.ui?.folder
-      ? window.ui.folder
-      : '';
-
+  docForm = function patchedDocForm(id) {
+    folderAtOpen = !id && ui.v === 'docs' && ui.folder ? ui.folder : '';
     originalDocForm(id);
 
-    if (folderAtOpen && window.w && !window.w.old) {
-      window.w.folder = folderAtOpen;
+    if (folderAtOpen && w && !w.old) {
+      w.folder = folderAtOpen;
     }
   };
 
-  // `pick()` in the existing wizard assigns a category-default folder.
-  // Restore the folder the user was actually viewing immediately afterward.
+  // The category picker normally switches to a category-default folder.
+  // Restore the folder the user was viewing after the tile click completes.
   document.addEventListener('click', (event) => {
-    if (!folderAtOpen || !window.w || window.w.old) return;
+    if (!folderAtOpen || !w || w.old) return;
     if (!event.target.closest('.tile')) return;
 
     const selectedFolder = folderAtOpen;
     setTimeout(() => {
-      if (window.w && !window.w.old) window.w.folder = selectedFolder;
+      if (w && !w.old) {
+        w.folder = selectedFolder;
+        if (w.step === 3) wz(0);
+      }
     }, 0);
   }, true);
 })();
